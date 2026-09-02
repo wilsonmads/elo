@@ -1,0 +1,27 @@
+{
+  "name": "conecta-doacoes-backend",
+  "version": "2.0.0",
+  "description": "Backend Node.js + Express + MySQL para a Plataforma Colaborativa de Doações e Vaquinhas Solidárias",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "mysql",
+    "vakinha",
+    "doacoes",
+    "crowdfunding"
+  ],
+  "author": "Conecta Doações Team",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "mysql2": "^3.11.5",
+    "sqlite3": "^5.1.7"
+  }
+}

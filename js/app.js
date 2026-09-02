@@ -1,391 +1,323 @@
-// app.js - Lógica da Aplicação SPA, Controle de Interface Material 3 & Modelo 3C
+// app.js - Controlador do Frontend Estilo Vakinha.com.br
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Instância do DataService
-  const db = window.dataService;
+  const api = window.apiService;
 
   // Estado da aplicação
-  let categoriaAtual = 'todos';
-  let termoBuscaAtual = '';
+  let currentCategory = 'todos';
+  let currentSearch = '';
+  let activeCampaignForDonation = null;
 
   // Elementos do DOM
-  const navItems = document.querySelectorAll('.m3-nav-item');
-  const sectionViews = document.querySelectorAll('.section-view');
-  const filterChips = document.querySelectorAll('.m3-chip-btn');
-  const inputBusca = document.getElementById('input-busca-ponto');
-  const gridPontos = document.getElementById('grid-pontos-container');
-  const gridMetas = document.getElementById('grid-metas-container');
-  const selectPontoAgendamento = document.getElementById('agend-ponto-select');
-  const listaAgendamentos = document.getElementById('lista-agendamentos-container');
-  const feedMural = document.getElementById('feed-mural-container');
-  const snackbar = document.getElementById('snackbar');
-  const snackbarMsg = document.getElementById('snackbar-message');
+  const gridContainer = document.getElementById('grid-vaquinhas-container');
+  const searchInput = document.getElementById('vk-search-input');
+  const categoryPills = document.querySelectorAll('.vk-pill-btn');
+  const lblContagem = document.getElementById('lbl-contagem-vaquinhas');
+  const toast = document.getElementById('toast');
+  const toastMsg = document.getElementById('toast-message');
 
   // Modais
-  const modalCadastrarPonto = document.getElementById('modal-cadastrar-ponto');
-  const modalContribuirMeta = document.getElementById('modal-contribuir-meta');
-  const modalTeoria = document.getElementById('modal-teoria');
-  const fabCadastrarPonto = document.getElementById('fab-cadastrar-ponto');
-  const btnTeoriaGuide = document.getElementById('btn-teoria-guide');
+  const modalDoarPix = document.getElementById('modal-doar-pix');
+  const modalCriarVaquinha = document.getElementById('modal-criar-vaquinha');
+  const modalDetalhes = document.getElementById('modal-detalhes-vaquinha');
+  const btnAbrirCriar = document.getElementById('btn-abrir-criar-vaquinha');
 
-  // --- NAVEGAÇÃO ENTRE ABAS (SPA) ---
-  navItems.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const targetViewId = btn.getAttribute('data-target');
-      
-      navItems.forEach(i => i.classList.remove('active'));
-      sectionViews.forEach(v => v.classList.remove('active'));
-
-      btn.classList.add('active');
-      const targetView = document.getElementById(targetViewId);
-      if (targetView) targetView.classList.add('active');
-    });
-  });
-
-  // --- RECONHECIMENTO DA TEORIA (MODAL) ---
-  if (btnTeoriaGuide) {
-    btnTeoriaGuide.addEventListener('click', () => openModal(modalTeoria));
-  }
-
-  // --- HELPER TOAST / SNACKBAR (Nielsen Heurística #1) ---
+  // Helper Toast Notification
   function showToast(message) {
-    snackbarMsg.textContent = message;
-    snackbar.classList.add('active');
+    toastMsg.textContent = message;
+    toast.classList.add('active');
     setTimeout(() => {
-      snackbar.classList.remove('active');
-    }, 3500);
+      toast.classList.remove('active');
+    }, 4000);
   }
 
-  // --- CONTROLE DE MODAIS ---
+  // Modais Controls
   function openModal(modalEl) {
     if (modalEl) modalEl.classList.add('active');
   }
+
   function closeModal(modalEl) {
     if (modalEl) modalEl.classList.remove('active');
   }
 
   document.querySelectorAll('.btn-close-modal').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const modal = e.target.closest('.m3-dialog-overlay');
+      const modal = e.target.closest('.vk-modal-overlay');
       closeModal(modal);
     });
   });
 
-  if (fabCadastrarPonto) {
-    fabCadastrarPonto.addEventListener('click', () => openModal(modalCadastrarPonto));
+  if (btnAbrirCriar) {
+    btnAbrirCriar.addEventListener('click', () => openModal(modalCriarVaquinha));
   }
 
-  // --- RENDERIZAÇÃO DOS PONTOS DE DOAÇÃO ---
-  async function renderPontos() {
-    gridPontos.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--md-sys-color-outline);">Carregando pontos...</p>';
-    const pontos = await db.getPontos(categoriaAtual, termoBuscaAtual);
-
-    if (pontos.length === 0) {
-      gridPontos.innerHTML = `
-        <div style="grid-column: 1/-1; text-align: center; padding: 32px; background: var(--md-sys-color-surface-container); border-radius: var(--md-shape-corner-medium);">
-          <span class="material-symbols-outlined" style="font-size: 48px; color: var(--md-sys-color-outline);">search_off</span>
-          <p style="margin-top: 8px; font-weight: 600;">Nenhum ponto de doação encontrado para esse filtro.</p>
-        </div>
-      `;
-      return;
-    }
-
-    gridPontos.innerHTML = pontos.map(ponto => {
-      // Badges das categorias
-      const chipsCategorias = ponto.categorias.map(cat => {
-        const icones = { alimentos: '🌾 Alimentos', roupas: '👕 Roupas', higiene: 'diet 🧴 Higiene' };
-        return `<span class="m3c-chip" style="font-size: 0.75rem;">${icones[cat] || cat}</span>`;
-      }).join(' ');
-
-      // Cor do status principal
-      const statusAlimento = ponto.statusEstoque.alimentos || 'moderado';
-      const badgeClass = statusAlimento === 'critico' ? 'status-critico' : (statusAlimento === 'suficiente' ? 'status-suficiente' : 'status-moderado');
-      const badgeText = statusAlimento === 'critico' ? '🔴 Estoque Crítico' : (statusAlimento === 'suficiente' ? '🟢 Estoque Ok' : '🟡 Necessita Doações');
-
-      return `
-        <div class="m3-card">
-          <div>
-            <div class="m3-card-header">
-              <span class="m3-badge-status ${badgeClass}">${badgeText}</span>
-            </div>
-            <h3 class="m3-card-title">${ponto.nome}</h3>
-            <div class="m3-card-body" style="margin-top: 8px;">
-              <p>${ponto.descricao}</p>
-              <div class="m3-card-info-item" style="margin-top: 10px;">
-                <span class="material-symbols-outlined">location_on</span>
-                <span>${ponto.endereco}</span>
-              </div>
-              <div class="m3-card-info-item">
-                <span class="material-symbols-outlined">schedule</span>
-                <span>${ponto.horario}</span>
-              </div>
-              <div class="m3-card-info-item">
-                <span class="material-symbols-outlined">call</span>
-                <span>${ponto.contato} (${ponto.responsavel})</span>
-              </div>
-              <div style="display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap;">
-                ${chipsCategorias}
-              </div>
-            </div>
-          </div>
-          <div style="display: flex; gap: 8px; margin-top: 16px;">
-            <button class="m3-btn m3-btn-primary btn-agendar-direto" data-pontoid="${ponto.id}" style="width: 100%; font-size: 0.8rem;">
-              <span class="material-symbols-outlined">event</span> Agendar Entrega
-            </button>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    // Preencher Select de Agendamento
-    selectPontoAgendamento.innerHTML = pontos.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
-
-    // Event listeners dos botões dentro dos cards
-    document.querySelectorAll('.btn-agendar-direto').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const pontoId = e.currentTarget.getAttribute('data-pontoid');
-        selectPontoAgendamento.value = pontoId;
-        // Alternar para aba de agendamento
-        document.querySelector('.m3-nav-item[data-target="view-agendamentos"]').click();
-      });
-    });
-  }
-
-  // --- FILTROS POR CHIP ---
-  filterChips.forEach(chip => {
-    chip.addEventListener('click', () => {
-      filterChips.forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      categoriaAtual = chip.getAttribute('data-categoria');
-      renderPontos();
+  // --- ACORDEÃO DE DUVIDAS (FAQ) ---
+  const faqQuestions = document.querySelectorAll('.vk-faq-question');
+  faqQuestions.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.vk-faq-item');
+      item.classList.toggle('active');
     });
   });
 
-  if (inputBusca) {
-    inputBusca.addEventListener('input', (e) => {
-      termoBuscaAtual = e.target.value;
-      renderPontos();
-    });
-  }
+  // --- RENDERIZAÇÃO DAS VAQUINHAS (VAKINHA STYLE) ---
+  async function loadAndRenderCampaigns() {
+    gridContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--vk-text-muted);">Carregando vaquinhas da rede...</p>';
+    
+    const campaigns = await api.getCampaigns(currentCategory, currentSearch);
 
-  // --- RENDERIZAÇÃO DAS METAS (COOPERAÇÃO M3C) ---
-  async function renderMetas() {
-    gridMetas.innerHTML = '<p>Carregando metas...</p>';
-    const metas = await db.getMetas();
-
-    gridMetas.innerHTML = metas.map(meta => {
-      const pct = Math.min(100, Math.round((meta.atualQtd / meta.metaQtd) * 100));
-      return `
-        <div class="m3-card">
-          <div>
-            <div class="m3-card-header">
-              <span class="m3c-chip"><span class="material-symbols-outlined">track_changes</span> Meta Coletiva</span>
-              <span style="font-weight: 700; color: var(--md-sys-color-primary); font-size: 0.9rem;">${pct}%</span>
-            </div>
-            <h3 class="m3-card-title">${meta.titulo}</h3>
-            <p style="font-size: 0.85rem; color: var(--md-sys-color-on-surface-variant); margin: 6px 0;">📍 ${meta.pontoNome}</p>
-            <p class="m3-card-body" style="margin-bottom: 8px;">${meta.descricao}</p>
-            
-            <div class="m3-progress-container">
-              <div class="m3-progress-bar" style="width: ${pct}%;"></div>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; color: var(--md-sys-color-on-surface-variant);">
-              <span>Arrecadado: ${meta.atualQtd} ${meta.unidade}</span>
-              <span>Objetivo: ${meta.metaQtd} ${meta.unidade}</span>
-            </div>
-          </div>
-
-          <button class="m3-btn m3-btn-primary btn-abrir-contribuir" data-id="${meta.id}" data-titulo="${meta.titulo}" data-unidade="${meta.unidade}" style="margin-top: 16px; width: 100%;">
-            <span class="material-symbols-outlined">favorite</span> Contribuir com esta Meta
-          </button>
+    if (!campaigns || campaigns.length === 0) {
+      gridContainer.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 48px; background: white; border-radius: var(--vk-radius-lg); border: 1px solid #e2e8f0;">
+          <span class="material-symbols-outlined" style="font-size: 56px; color: var(--vk-text-muted);">search_off</span>
+          <h3 style="margin-top: 12px; font-weight: 800;">Nenhuma vaquinha encontrada.</h3>
+          <p style="color: var(--vk-text-muted); font-size: 0.9rem;">Tente buscar por outro termo ou selecione outra categoria.</p>
         </div>
       `;
-    }).join('');
-
-    // Listener para o modal de contribuição
-    document.querySelectorAll('.btn-abrir-contribuir').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const id = e.currentTarget.getAttribute('data-id');
-        const titulo = e.currentTarget.getAttribute('data-titulo');
-        const unidade = e.currentTarget.getAttribute('data-unidade');
-
-        document.getElementById('modal-meta-id').value = id;
-        document.getElementById('modal-meta-titulo').textContent = `🤝 Contribuir: ${titulo}`;
-        document.getElementById('modal-meta-unidade').textContent = unidade;
-        openModal(modalContribuirMeta);
-      });
-    });
-  }
-
-  // Submit Contribuir Meta
-  const formContribuirMeta = document.getElementById('form-contribuir-meta');
-  if (formContribuirMeta) {
-    formContribuirMeta.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const metaId = document.getElementById('modal-meta-id').value;
-      const qtd = document.getElementById('meta-qtd').value;
-      const doador = document.getElementById('meta-doador-nome').value;
-
-      try {
-        await db.contribuirMeta(metaId, qtd, doador);
-        closeModal(modalContribuirMeta);
-        showToast(`Sua contribuição de +${qtd} unidades foi registrada com sucesso! Obrigado! ❤️`);
-        renderMetas();
-        renderMural();
-      } catch (err) {
-        showToast('Erro ao registrar doação.');
-      }
-    });
-  }
-
-  // --- RENDERIZAÇÃO DOS AGENDAMENTOS (COORDENAÇÃO M3C) ---
-  async function renderAgendamentos() {
-    const agendamentos = await db.getAgendamentos();
-    if (agendamentos.length === 0) {
-      listaAgendamentos.innerHTML = '<p style="color: var(--md-sys-color-outline);">Nenhum agendamento ativo no momento.</p>';
+      if (lblContagem) lblContagem.textContent = '0 vaquinhas encontradas';
       return;
     }
 
-    listaAgendamentos.innerHTML = agendamentos.map(a => `
-      <div class="m3-card" style="padding: 14px;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-          <div>
-            <h4 style="font-size: 1rem; font-weight: 700;">${a.pontoNome}</h4>
-            <p style="font-size: 0.85rem; color: var(--md-sys-color-on-surface-variant);"><strong>Doador:</strong> ${a.doadorNome}</p>
-            <p style="font-size: 0.85rem; color: var(--md-sys-color-on-surface-variant);"><strong>Itens:</strong> ${a.itens}</p>
-            <p style="font-size: 0.8rem; margin-top: 4px; color: var(--md-sys-color-primary); font-weight: 600;">
-              📅 ${new Date(a.dataHora).toLocaleString('pt-BR')} (${a.modalidade.toUpperCase()})
-            </p>
-          </div>
-          <button class="m3-btn-icon btn-cancelar-agend" data-id="${a.id}" title="Cancelar Agendamento" style="color: var(--md-sys-color-error);">
-            <span class="material-symbols-outlined">delete</span>
-          </button>
-        </div>
-      </div>
-    `).join('');
+    if (lblContagem) lblContagem.textContent = `${campaigns.length} vaquinha(s) ativa(s)`;
 
-    document.querySelectorAll('.btn-cancelar-agend').forEach(btn => {
+    gridContainer.innerHTML = campaigns.map(c => {
+      const currentAmt = parseFloat(c.current_amount || c.atualQtd || 0);
+      const targetAmt = parseFloat(c.target_amount || c.metaQtd || 1000);
+      const targetItems = parseInt(c.target_items || 0);
+      const currentItems = parseInt(c.current_items || 0);
+
+      // Calcular % de progresso
+      const pct = targetAmt > 0 ? Math.min(100, Math.round((currentAmt / targetAmt) * 100)) : 50;
+
+      const code = c.code || `#VK-${c.id}`;
+      const creator = c.creator_name || c.responsavel || 'Organização Solidária';
+      const location = c.location || c.endereco || 'Blumenau - SC';
+      const image = c.image_url || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&auto=format&fit=crop&q=80';
+      const title = c.title || c.nome || 'Campanha Solidária';
+      const desc = c.description || c.descricao || 'Contribua com esta causa importante.';
+      const cat = c.category || (c.categorias ? c.categorias[0] : 'alimentos');
+
+      return `
+        <article class="vk-card">
+          <div>
+            <div class="vk-card-media">
+              <img src="${image}" alt="${title}" loading="lazy">
+              <span class="vk-card-badge-cat">${cat}</span>
+              <span class="vk-card-code">${code}</span>
+            </div>
+
+            <div class="vk-card-content">
+              <div>
+                <div class="vk-card-creator">
+                  <span>${creator}</span>
+                  <span class="material-symbols-outlined vk-verified-check" title="Criador Verificado">verified</span>
+                  <span>• ${location}</span>
+                </div>
+                <h3 class="vk-card-title">${title}</h3>
+                <p class="vk-card-desc">${desc}</p>
+              </div>
+
+              <div>
+                <div class="vk-progress-box">
+                  <div class="vk-progress-bar" style="width: ${pct}%;"></div>
+                </div>
+
+                <div class="vk-card-metrics">
+                  <div>
+                    <div class="vk-metric-raised">R$ ${currentAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                    <div class="vk-metric-target">Meta: R$ ${targetAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${pct}%)</div>
+                  </div>
+                  ${targetItems > 0 ? `<div style="text-align: right; font-size: 0.8rem; font-weight: 700; color: var(--vk-text-muted);">${currentItems}/${targetItems} ${c.unit || 'itens'}</div>` : ''}
+                </div>
+
+                <div class="vk-card-footer">
+                  <button class="vk-btn-doar btn-abrir-doar" data-id="${c.id}" data-title="${title}" data-code="${code}">
+                    <span class="material-symbols-outlined">favorite</span> DOAR AGORA
+                  </button>
+                  <button class="vk-btn-share btn-ver-detalhes" data-id="${c.id}" title="Ver detalhes e apoiadores">
+                    <span class="material-symbols-outlined">info</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    }).join('');
+
+    // Attach Listeners aos botões DOAR AGORA
+    document.querySelectorAll('.btn-abrir-doar').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.getAttribute('data-id');
+        const title = e.currentTarget.getAttribute('data-title');
+        const code = e.currentTarget.getAttribute('data-code');
+
+        activeCampaignForDonation = id;
+        document.getElementById('modal-doar-campaign-id').value = id;
+        document.getElementById('modal-doar-titulo').textContent = `💚 Apoiar: ${title} (${code})`;
+        
+        // Gerar código PIX único
+        const randomPix = `00020126580014br.gov.bcb.pix0136${code}-PIX-${Date.now()}520400005303986540550.005802BR5920CONECTA DOAÇÕES VK6009BLUMENAU62070503***6304`;
+        document.getElementById('lbl-pix-code').textContent = randomPix;
+
+        openModal(modalDoarPix);
+      });
+    });
+
+    // Attach Listeners para Ver Detalhes
+    document.querySelectorAll('.btn-ver-detalhes').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const id = e.currentTarget.getAttribute('data-id');
-        if (confirm('Deseja realmente cancelar este agendamento?')) {
-          await db.cancelarAgendamento(id);
-          showToast('Agendamento cancelado.');
-          renderAgendamentos();
+        const detailsContainer = document.getElementById('detalhes-conteudo');
+        detailsContainer.innerHTML = '<p>Carregando detalhes...</p>';
+        openModal(modalDetalhes);
+
+        const data = await api.getCampaignById(id);
+        if (!data) {
+          detailsContainer.innerHTML = '<p>Erro ao carregar detalhes.</p>';
+          return;
         }
+
+        const currentAmt = parseFloat(data.current_amount || 0);
+        const targetAmt = parseFloat(data.target_amount || 1000);
+        const pct = Math.min(100, Math.round((currentAmt / targetAmt) * 100));
+
+        detailsContainer.innerHTML = `
+          <div>
+            <img src="${data.image_url}" style="width: 100%; height: 220px; object-fit: cover; border-radius: var(--vk-radius-md); margin-bottom: 16px;">
+            <span class="vk-card-code" style="position: static;">${data.code}</span>
+            <h2 style="font-size: 1.3rem; font-weight: 800; margin: 8px 0;">${data.title}</h2>
+            <p style="font-size: 0.85rem; color: var(--vk-text-muted); margin-bottom: 12px;">Organizado por <strong>${data.creator_name}</strong> • ${data.location}</p>
+            <p style="font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">${data.description}</p>
+            
+            <div class="vk-progress-box">
+              <div class="vk-progress-bar" style="width: ${pct}%;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-weight: 800; margin-bottom: 24px;">
+              <span>R$ ${currentAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} arrecadados</span>
+              <span>Meta: R$ ${targetAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+            </div>
+
+            <h3 style="font-size: 1.1rem; font-weight: 800; border-top: 1px solid #e2e8f0; padding-top: 16px; margin-bottom: 12px;">👥 Recentes Apoiadores / Doadores</h3>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              ${data.donations && data.donations.length > 0 ? data.donations.map(d => `
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: var(--vk-radius-sm);">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700;">
+                    <span>${d.donor_name}</span>
+                    <span style="color: var(--vk-green-dark);">R$ ${parseFloat(d.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <p style="font-size: 0.82rem; color: var(--vk-text-secondary); margin-top: 4px;">"${d.support_message || 'Apoiou esta vaquinha!'}"</p>
+                </div>
+              `).join('') : '<p style="font-size: 0.85rem; color: var(--vk-text-muted);">Seja o primeiro a apoiar esta vaquinha!</p>'}
+            </div>
+          </div>
+        `;
       });
     });
   }
 
-  // Submit Novo Agendamento
-  const formNovoAgendamento = document.getElementById('form-novo-agendamento');
-  if (formNovoAgendamento) {
-    formNovoAgendamento.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const pontoSelect = document.getElementById('agend-ponto-select');
-      const pontoNome = pontoSelect.options[pontoSelect.selectedIndex].text;
+  // --- NAVEGAÇÃO POR CATEGORIAS & BUSCA ---
+  categoryPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      categoryPills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentCategory = pill.getAttribute('data-cat');
+      loadAndRenderCampaigns();
+    });
+  });
 
-      const novo = {
-        doadorNome: document.getElementById('agend-doador-nome').value,
-        pontoId: pontoSelect.value,
-        pontoNome: pontoNome,
-        itens: document.getElementById('agend-itens').value,
-        dataHora: document.getElementById('agend-data').value,
-        modalidade: document.getElementById('agend-modalidade').value
-      };
-
-      await db.addAgendamento(novo);
-      showToast('Agendamento realizado com sucesso!');
-      formNovoAgendamento.reset();
-      renderAgendamentos();
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      currentSearch = e.target.value;
+      loadAndRenderCampaigns();
     });
   }
 
-  // --- RENDERIZAÇÃO DO MURAL COMUNITÁRIO (COMUNICAÇÃO M3C) ---
-  async function renderMural() {
-    feedMural.innerHTML = '<p>Carregando mural...</p>';
-    const mensagens = await db.getMensagens();
+  // --- SELEÇÃO RÁPIDA DE VALORES R$ ---
+  const amountBtns = document.querySelectorAll('.vk-amount-btn');
+  const inputValor = document.getElementById('input-doar-valor');
 
-    feedMural.innerHTML = mensagens.map(m => {
-      const badgesTipo = {
-        aviso: '📢 Aviso',
-        ajuda: '🆘 Pedido de Ajuda',
-        agradecimento: '❤️ Agradecimento'
-      };
-      return `
-        <div class="m3-post-card">
-          <div class="m3-post-header">
-            <div>
-              <span class="m3-post-author">${m.autor}</span>
-              <span style="font-size: 0.75rem; color: var(--md-sys-color-outline);"> (${m.papel})</span>
-            </div>
-            <span>${m.data}</span>
-          </div>
-          <p style="font-size: 0.9rem; margin-top: 4px;">${m.texto}</p>
-          <div style="margin-top: 8px;">
-            <span class="m3c-chip" style="font-size: 0.7rem; padding: 2px 8px;">${badgesTipo[m.tipo] || m.tipo}</span>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
+  amountBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      amountBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      inputValor.value = btn.getAttribute('data-val');
+    });
+  });
 
-  // Submit Novo Post no Mural
-  const formNovoPost = document.getElementById('form-novo-post');
-  if (formNovoPost) {
-    formNovoPost.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const nova = {
-        autor: document.getElementById('post-autor').value,
-        papel: 'Membro da Comunidade',
-        texto: document.getElementById('post-texto').value,
-        tipo: document.getElementById('post-tipo').value
-      };
-
-      await db.addMensagem(nova);
-      showToast('Mensagem publicada no mural comunitário!');
-      formNovoPost.reset();
-      renderMural();
+  // --- COPIAR CÓDIGO PIX ---
+  const btnCopiarPix = document.getElementById('btn-copiar-pix');
+  if (btnCopiarPix) {
+    btnCopiarPix.addEventListener('click', () => {
+      const codeText = document.getElementById('lbl-pix-code').textContent;
+      navigator.clipboard.writeText(codeText).then(() => {
+        showToast('📋 Código PIX copiado com sucesso para a sua área de transferência!');
+      }).catch(() => {
+        showToast('Código PIX selecionado.');
+      });
     });
   }
 
-  // Submit Cadastrar Novo Ponto
-  const formCadastrarPonto = document.getElementById('form-cadastrar-ponto');
-  if (formCadastrarPonto) {
-    formCadastrarPonto.addEventListener('submit', async (e) => {
+  // --- SUBMIT DOAR AGORA ---
+  const formDoarPix = document.getElementById('form-doar-pix');
+  if (formDoarPix) {
+    formDoarPix.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const checkboxes = document.querySelectorAll('input[name="cat-item"]:checked');
-      const categorias = Array.from(checkboxes).map(c => c.value);
+      const campaign_id = document.getElementById('modal-doar-campaign-id').value;
+      const amount = parseFloat(document.getElementById('input-doar-valor').value || 0);
+      const items_qty = parseInt(document.getElementById('input-doar-itens').value || 0);
+      const donor_name = document.getElementById('input-doar-nome').value;
+      const support_message = document.getElementById('input-doar-mensagem').value;
 
-      if (categorias.length === 0) {
-        showToast('Selecione pelo menos 1 categoria de item aceita.');
-        return;
+      try {
+        await api.createDonation({
+          campaign_id,
+          amount,
+          items_qty,
+          donor_name,
+          support_message,
+          payment_method: 'pix'
+        });
+
+        closeModal(modalDoarPix);
+        showToast(`🎉 Doação de R$ ${amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} registrada com sucesso! Muito obrigado pelo apoio! ❤️`);
+        loadAndRenderCampaigns();
+      } catch (err) {
+        showToast('Erro ao processar doação.');
       }
-
-      const novoPonto = {
-        nome: document.getElementById('ponto-nome').value,
-        endereco: document.getElementById('ponto-endereco').value,
-        bairro: 'Centro',
-        contato: document.getElementById('ponto-contato').value,
-        horario: document.getElementById('ponto-horario').value,
-        responsavel: 'Voluntário Cadastrado',
-        categorias: categorias,
-        statusEstoque: { alimentos: 'critico' },
-        descricao: document.getElementById('ponto-descricao').value,
-        lat: -26.9150,
-        lng: -49.0650
-      };
-
-      await db.addPonto(novoPonto);
-      closeModal(modalCadastrarPonto);
-      showToast('Novo Ponto de Doação cadastrado com sucesso!');
-      formCadastrarPonto.reset();
-      renderPontos();
     });
   }
 
-  // --- INICIALIZAÇÃO DA APLICAÇÃO ---
-  renderPontos();
-  renderMetas();
-  renderAgendamentos();
-  renderMural();
+  // --- SUBMIT CRIAR UMA VAQUINHA ---
+  const formCriarVaquinha = document.getElementById('form-criar-vaquinha');
+  if (formCriarVaquinha) {
+    formCriarVaquinha.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const newCampaign = {
+        title: document.getElementById('new-title').value,
+        category: document.getElementById('new-category').value,
+        target_amount: parseFloat(document.getElementById('new-target-amount').value || 0),
+        target_items: parseInt(document.getElementById('new-target-items').value || 0),
+        unit: document.getElementById('new-unit').value || 'unidades',
+        description: document.getElementById('new-description').value,
+        creator_name: document.getElementById('new-creator-name').value,
+        location: document.getElementById('new-location').value,
+        image_url: document.getElementById('new-image-url').value
+      };
+
+      try {
+        await api.createCampaign(newCampaign);
+        closeModal(modalCriarVaquinha);
+        showToast('🚀 Sua Vaquinha Solidária foi criada e publicada com SUCESSO!');
+        formCriarVaquinha.reset();
+        loadAndRenderCampaigns();
+      } catch (err) {
+        showToast('Erro ao criar vaquinha.');
+      }
+    });
+  }
+
+  // Carga inicial das campanhas
+  loadAndRenderCampaigns();
 });
