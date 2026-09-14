@@ -27,7 +27,7 @@ app.use('/api/donations', donationRoutes);
 app.get('/api/status', (req, res) => {
   res.json({
     status: 'online',
-    system: 'Conecta Doações - Backend API (Vakinha Style)',
+    system: 'SolidarAção - Backend API (Vakinha × ActionAid)',
     dbDriver: db.getDriver(),
     timestamp: new Date().toISOString()
   });
@@ -44,7 +44,7 @@ async function seedInitialData() {
 
       const initialCampaigns = [
         {
-          code: 'VK-1001',
+          code: 'SA-1001',
           title: 'Ajude a Alimentar 200 Famílias - Cestas Básicas de Emergência',
           slug: 'ajude-alimentar-200-familias',
           category: 'alimentos',
@@ -60,7 +60,7 @@ async function seedInitialData() {
           location: 'Blumenau - SC'
         },
         {
-          code: 'VK-1002',
+          code: 'SA-1002',
           title: 'Campanha do Agasalho e Cobertores - Inverno Sem Fome',
           slug: 'campanha-agasalho-cobertores',
           category: 'roupas',
@@ -76,7 +76,7 @@ async function seedInitialData() {
           location: 'Blumenau - SC'
         },
         {
-          code: 'VK-1003',
+          code: 'SA-1003',
           title: 'Kit Higiene Pessoal e Proteção para Mães Solteiras',
           slug: 'kit-higiene-pessoal-maes',
           category: 'higiene',

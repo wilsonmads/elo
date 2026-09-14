@@ -1,13 +1,13 @@
-// mock-data.js - Dados Iniciais Estilo Vakinha.com.br
+// mock-data.js - Dados Iniciais da Plataforma SolidarAção
 
 window.INITIAL_DATA = {
   pontos: [
     {
       id: 1,
-      code: 'VK-1001',
-      nome: 'Ajude a Alimentar 200 Famílias - Cestas Básicas de Emergência',
-      title: 'Ajude a Alimentar 200 Famílias - Cestas Básicas de Emergência',
-      endereco: 'Bairro Centenário - Blumenau',
+      code: 'SA-1001',
+      nome: 'Ajude a Alimentar 200 Famílias — Cestas Básicas de Emergência',
+      title: 'Ajude a Alimentar 200 Famílias — Cestas Básicas de Emergência',
+      endereco: 'Bairro Centenário — Blumenau',
       bairro: 'Centenário',
       contato: '(47) 99123-4567',
       responsavel: 'ONG Esperança Viva',
@@ -29,10 +29,10 @@ window.INITIAL_DATA = {
     },
     {
       id: 2,
-      code: 'VK-1002',
-      nome: 'Campanha do Agasalho e Cobertores - Inverno Sem Fome',
-      title: 'Campanha do Agasalho e Cobertores - Inverno Sem Fome',
-      endereco: 'Centro - Blumenau',
+      code: 'SA-1002',
+      nome: 'Campanha do Agasalho e Cobertores — Inverno Sem Fome',
+      title: 'Campanha do Agasalho e Cobertores — Inverno Sem Fome',
+      endereco: 'Centro — Blumenau',
       bairro: 'Centro',
       contato: '(47) 98877-6655',
       responsavel: 'ONG Mãos Unidas',
@@ -54,10 +54,10 @@ window.INITIAL_DATA = {
     },
     {
       id: 3,
-      code: 'VK-1003',
-      nome: 'Kit Higiene Pessoal e Proteção para Mães Solteiras',
-      title: 'Kit Higiene Pessoal e Proteção para Mães Solteiras',
-      endereco: 'Victor Konder - Blumenau',
+      code: 'SA-1003',
+      nome: 'Kit Higiene Pessoal e Proteção',
+      title: 'Kit Higiene Pessoal e Proteção',
+      endereco: 'Victor Konder — Blumenau',
       bairro: 'Victor Konder',
       contato: '(47) 99911-2233',
       responsavel: 'Instituto Proteja',

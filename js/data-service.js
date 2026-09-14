@@ -2,12 +2,22 @@
 
 class DataService {
   constructor() {
-    this.STORAGE_KEY = 'CONECTA_DOACOES_DB_V1';
+    this.STORAGE_KEY = 'SOLIDARACAO_DB_V2';
+    this.OLD_STORAGE_KEY = 'CONECTA_DOACOES_DB_V1';
     this.init();
   }
 
   init() {
     if (!localStorage.getItem(this.STORAGE_KEY)) {
+      const oldData = localStorage.getItem(this.OLD_STORAGE_KEY);
+      if (oldData) {
+        try {
+          localStorage.setItem(this.STORAGE_KEY, oldData);
+          return;
+        } catch (e) {
+          // fallback
+        }
+      }
       const initialData = window.INITIAL_DATA || {
         pontos: [],
         metas: [],

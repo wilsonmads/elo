@@ -1,4 +1,5 @@
-// app.js - Controlador do Frontend Estilo Vakinha.com.br
+// app.js - Controlador do Frontend SolidarAção
+// Combinação: Funcionalidades de Crowdfunding (Vakinha) + Narrativa e Engajamento Social (ActionAid)
 
 document.addEventListener('DOMContentLoaded', () => {
   const api = window.apiService;
@@ -9,143 +10,249 @@ document.addEventListener('DOMContentLoaded', () => {
   let activeCampaignForDonation = null;
 
   // Elementos do DOM
-  const gridContainer = document.getElementById('grid-vaquinhas-container');
-  const searchInput = document.getElementById('vk-search-input');
-  const categoryPills = document.querySelectorAll('.vk-pill-btn');
-  const lblContagem = document.getElementById('lbl-contagem-vaquinhas');
+  const gridContainer = document.getElementById('grid-campanhas-container');
+  const searchInput = document.getElementById('sa-search-input');
+  const categoryPills = document.querySelectorAll('.sa-pill-btn');
+  const lblContagem = document.getElementById('lbl-contagem-campanhas');
   const toast = document.getElementById('toast');
   const toastMsg = document.getElementById('toast-message');
 
   // Modais
   const modalDoarPix = document.getElementById('modal-doar-pix');
-  const modalCriarVaquinha = document.getElementById('modal-criar-vaquinha');
-  const modalDetalhes = document.getElementById('modal-detalhes-vaquinha');
-  const btnAbrirCriar = document.getElementById('btn-abrir-criar-vaquinha');
+  const modalCriarCampanha = document.getElementById('modal-criar-campanha');
+  const modalDetalhes = document.getElementById('modal-detalhes-campanha');
+  const btnAbrirCriar = document.getElementById('btn-abrir-criar-campanha');
+  const btnHeroCriar = document.getElementById('btn-hero-criar');
+  const btnCtaCriar = document.getElementById('btn-cta-criar');
 
   // Helper Toast Notification
   function showToast(message) {
+    if (!toast || !toastMsg) return;
     toastMsg.textContent = message;
-    toast.classList.add('active');
+    toast.classList.add('show');
     setTimeout(() => {
-      toast.classList.remove('active');
-    }, 4000);
+      toast.classList.remove('show');
+    }, 4500);
   }
 
-  // Modais Controls
+  // Controle de Modais
   function openModal(modalEl) {
-    if (modalEl) modalEl.classList.add('active');
+    if (modalEl) modalEl.classList.add('open');
   }
 
   function closeModal(modalEl) {
-    if (modalEl) modalEl.classList.remove('active');
+    if (modalEl) modalEl.classList.remove('open');
   }
 
   document.querySelectorAll('.btn-close-modal').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const modal = e.target.closest('.vk-modal-overlay');
+      const modal = e.target.closest('.sa-modal-overlay');
       closeModal(modal);
     });
   });
 
-  if (btnAbrirCriar) {
-    btnAbrirCriar.addEventListener('click', () => openModal(modalCriarVaquinha));
-  }
-
-  // --- ACORDEÃO DE DUVIDAS (FAQ) ---
-  const faqQuestions = document.querySelectorAll('.vk-faq-question');
-  faqQuestions.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const item = btn.closest('.vk-faq-item');
-      item.classList.toggle('active');
+  // Fechar ao clicar fora do modal
+  document.querySelectorAll('.sa-modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        closeModal(overlay);
+      }
     });
   });
 
-  // --- RENDERIZAÇÃO DAS VAQUINHAS (VAKINHA STYLE) ---
+  // Gatilhos para abrir modal de criação de campanha
+  [btnAbrirCriar, btnHeroCriar, btnCtaCriar].forEach(btn => {
+    if (btn) {
+      btn.addEventListener('click', () => openModal(modalCriarCampanha));
+    }
+  });
+
+  // --- CONTADORES DE IMPACTO ANIMADOS (Estilo ActionAid) ---
+  function initImpactCounters() {
+    const counters = document.querySelectorAll('.sa-counter-num');
+    if (!counters.length) return;
+
+    const animateCount = (el) => {
+      const target = parseInt(el.getAttribute('data-target') || '0', 10);
+      const duration = 2000;
+      const startTime = performance.now();
+
+      const update = (currentTime) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeProgress = 1 - Math.pow(1 - progress, 3); // Ease-out cúbico
+        const currentVal = Math.floor(easeProgress * target);
+
+        if (target >= 1000000) {
+          el.textContent = `${(currentVal / 1000000).toFixed(currentVal >= target ? 0 : 1)} Milhões`;
+        } else if (target >= 1000) {
+          el.textContent = currentVal.toLocaleString('pt-BR');
+        } else {
+          el.textContent = `${currentVal}+`;
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        } else {
+          if (target >= 1000000) {
+            el.textContent = '33 Milhões';
+          } else if (target === 350) {
+            el.textContent = '350+';
+          } else {
+            el.textContent = target.toLocaleString('pt-BR');
+          }
+        }
+      };
+
+      requestAnimationFrame(update);
+    };
+
+    // IntersectionObserver para iniciar animação ao rolar até a seção
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            counters.forEach(c => animateCount(c));
+            obs.disconnect();
+          }
+        });
+      }, { threshold: 0.25 });
+
+      const impactoSec = document.getElementById('section-impacto');
+      if (impactoSec) observer.observe(impactoSec);
+    } else {
+      counters.forEach(c => animateCount(c));
+    }
+  }
+
+  // --- FILTRAGEM VIA PILARES DE CAUSA (Estilo ActionAid) ---
+  document.querySelectorAll('.sa-pilar-item a').forEach(link => {
+    link.addEventListener('click', (e) => {
+      const filter = e.currentTarget.getAttribute('data-filter');
+      if (filter) {
+        // Encontrar e ativar o pill correspondente
+        categoryPills.forEach(p => {
+          if (p.getAttribute('data-cat') === filter) {
+            p.classList.add('active');
+          } else {
+            p.classList.remove('active');
+          }
+        });
+        currentCategory = filter;
+        loadAndRenderCampaigns();
+      }
+    });
+  });
+
+  // --- ACORDEÃO DE DÚVIDAS (FAQ) ---
+  const faqQuestions = document.querySelectorAll('.sa-faq-question');
+  faqQuestions.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.sa-faq-item');
+      const answer = item.querySelector('.sa-faq-answer');
+      const isOpen = btn.classList.contains('open');
+
+      // Fecha todos os outros
+      document.querySelectorAll('.sa-faq-question').forEach(q => q.classList.remove('open'));
+      document.querySelectorAll('.sa-faq-answer').forEach(a => a.classList.remove('open'));
+
+      if (!isOpen) {
+        btn.classList.add('open');
+        answer.classList.add('open');
+      }
+    });
+  });
+
+  // --- RENDERIZAÇÃO DAS CAMPANHAS SOLIDÁRIAS ---
   async function loadAndRenderCampaigns() {
-    gridContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--vk-text-muted);">Carregando vaquinhas da rede...</p>';
+    if (!gridContainer) return;
+
+    gridContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--sa-text-muted); padding: 32px 0;">Carregando campanhas da rede SolidarAção...</p>';
     
     const campaigns = await api.getCampaigns(currentCategory, currentSearch);
 
     if (!campaigns || campaigns.length === 0) {
       gridContainer.innerHTML = `
-        <div style="grid-column: 1/-1; text-align: center; padding: 48px; background: white; border-radius: var(--vk-radius-lg); border: 1px solid #e2e8f0;">
-          <span class="material-symbols-outlined" style="font-size: 56px; color: var(--vk-text-muted);">search_off</span>
-          <h3 style="margin-top: 12px; font-weight: 800;">Nenhuma vaquinha encontrada.</h3>
-          <p style="color: var(--vk-text-muted); font-size: 0.9rem;">Tente buscar por outro termo ou selecione outra categoria.</p>
+        <div style="grid-column: 1/-1; text-align: center; padding: 48px; background: white; border-radius: var(--sa-radius-lg); border: 1px solid #e2e8f0;">
+          <span class="material-symbols-outlined" style="font-size: 56px; color: var(--sa-text-muted);">search_off</span>
+          <h3 style="margin-top: 12px; font-weight: 800;">Nenhuma campanha encontrada.</h3>
+          <p style="color: var(--sa-text-muted); font-size: 0.9rem; margin-top: 4px;">Tente buscar por outro termo ou selecione outra categoria.</p>
         </div>
       `;
-      if (lblContagem) lblContagem.textContent = '0 vaquinhas encontradas';
+      if (lblContagem) lblContagem.textContent = '0 campanhas encontradas';
       return;
     }
 
-    if (lblContagem) lblContagem.textContent = `${campaigns.length} vaquinha(s) ativa(s)`;
+    if (lblContagem) lblContagem.textContent = `${campaigns.length} campanha(s) ativa(s) na rede SolidarAção`;
 
     gridContainer.innerHTML = campaigns.map(c => {
       const currentAmt = parseFloat(c.current_amount || c.atualQtd || 0);
       const targetAmt = parseFloat(c.target_amount || c.metaQtd || 1000);
-      const targetItems = parseInt(c.target_items || 0);
-      const currentItems = parseInt(c.current_items || 0);
+      const targetItems = parseInt(c.target_items || 0, 10);
+      const currentItems = parseInt(c.current_items || 0, 10);
 
       // Calcular % de progresso
       const pct = targetAmt > 0 ? Math.min(100, Math.round((currentAmt / targetAmt) * 100)) : 50;
 
-      const code = c.code || `#VK-${c.id}`;
+      const code = c.code || `#SA-${c.id}`;
       const creator = c.creator_name || c.responsavel || 'Organização Solidária';
       const location = c.location || c.endereco || 'Blumenau - SC';
       const image = c.image_url || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&auto=format&fit=crop&q=80';
       const title = c.title || c.nome || 'Campanha Solidária';
-      const desc = c.description || c.descricao || 'Contribua com esta causa importante.';
+      const desc = c.description || c.descricao || 'Contribua com esta causa de impacto real.';
       const cat = c.category || (c.categorias ? c.categorias[0] : 'alimentos');
 
+      const isUrgent = pct < 40;
+
       return `
-        <article class="vk-card">
-          <div>
-            <div class="vk-card-media">
-              <img src="${image}" alt="${title}" loading="lazy">
-              <span class="vk-card-badge-cat">${cat}</span>
-              <span class="vk-card-code">${code}</span>
+        <article class="sa-campaign-card">
+          <div class="sa-card-image">
+            <img src="${image}" alt="${title}" loading="lazy">
+          </div>
+
+          <div class="sa-card-body">
+            <div class="sa-card-tags">
+              <span class="sa-card-tag">${cat.toUpperCase()}</span>
+              ${isUrgent ? '<span class="sa-card-tag sa-card-tag--urgent">PRIORIDADE</span>' : ''}
             </div>
 
-            <div class="vk-card-content">
-              <div>
-                <div class="vk-card-creator">
-                  <span>${creator}</span>
-                  <span class="material-symbols-outlined vk-verified-check" title="Criador Verificado">verified</span>
-                  <span>• ${location}</span>
-                </div>
-                <h3 class="vk-card-title">${title}</h3>
-                <p class="vk-card-desc">${desc}</p>
-              </div>
+            <h3 class="sa-card-title">${title}</h3>
+            <p class="sa-card-desc">${desc}</p>
 
-              <div>
-                <div class="vk-progress-box">
-                  <div class="vk-progress-bar" style="width: ${pct}%;"></div>
-                </div>
-
-                <div class="vk-card-metrics">
-                  <div>
-                    <div class="vk-metric-raised">R$ ${currentAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                    <div class="vk-metric-target">Meta: R$ ${targetAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${pct}%)</div>
-                  </div>
-                  ${targetItems > 0 ? `<div style="text-align: right; font-size: 0.8rem; font-weight: 700; color: var(--vk-text-muted);">${currentItems}/${targetItems} ${c.unit || 'itens'}</div>` : ''}
-                </div>
-
-                <div class="vk-card-footer">
-                  <button class="vk-btn-doar btn-abrir-doar" data-id="${c.id}" data-title="${title}" data-code="${code}">
-                    <span class="material-symbols-outlined">favorite</span> DOAR AGORA
-                  </button>
-                  <button class="vk-btn-share btn-ver-detalhes" data-id="${c.id}" title="Ver detalhes e apoiadores">
-                    <span class="material-symbols-outlined">info</span>
-                  </button>
-                </div>
-              </div>
+            <div class="sa-card-creator">
+              <span class="material-symbols-outlined">verified</span>
+              <strong>${creator}</strong> • ${location}
             </div>
+
+            <div class="sa-progress-bar-wrapper">
+              <div class="sa-progress-bar-track">
+                <div class="sa-progress-bar-fill" style="width: ${pct}%;"></div>
+              </div>
+              <div class="sa-progress-label">
+                <span>R$ ${currentAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                <strong>${pct}% (Meta: R$ ${targetAmt.toLocaleString('pt-BR', { minimumFractionDigits: 0 })})</strong>
+              </div>
+              ${targetItems > 0 ? `
+                <div style="font-size: 0.75rem; color: var(--sa-text-muted); margin-top: 4px; text-align: right;">
+                  ${currentItems}/${targetItems} ${c.unit || 'itens'} arrecadados
+                </div>
+              ` : ''}
+            </div>
+          </div>
+
+          <div class="sa-card-actions">
+            <button class="sa-btn-primary btn-abrir-doar" style="flex: 1;" data-id="${c.id}" data-title="${title}" data-code="${code}">
+              <span class="material-symbols-outlined">volunteer_activism</span> APOIAR
+            </button>
+            <button class="sa-btn-secondary btn-ver-detalhes" data-id="${c.id}" title="Ver detalhes da campanha">
+              <span class="material-symbols-outlined">info</span> Detalhes
+            </button>
           </div>
         </article>
       `;
     }).join('');
 
-    // Attach Listeners aos botões DOAR AGORA
+    // Attach Listeners aos botões APOIAR
     document.querySelectorAll('.btn-abrir-doar').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = e.currentTarget.getAttribute('data-id');
@@ -157,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modal-doar-titulo').textContent = `💚 Apoiar: ${title} (${code})`;
         
         // Gerar código PIX único
-        const randomPix = `00020126580014br.gov.bcb.pix0136${code}-PIX-${Date.now()}520400005303986540550.005802BR5920CONECTA DOAÇÕES VK6009BLUMENAU62070503***6304`;
+        const randomPix = `00020126580014br.gov.bcb.pix0136${code}-PIX-${Date.now()}520400005303986540550.005802BR5920SOLIDARACAO BR6009BLUMENAU62070503***6304`;
         document.getElementById('lbl-pix-code').textContent = randomPix;
 
         openModal(modalDoarPix);
@@ -169,12 +276,12 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', async (e) => {
         const id = e.currentTarget.getAttribute('data-id');
         const detailsContainer = document.getElementById('detalhes-conteudo');
-        detailsContainer.innerHTML = '<p>Carregando detalhes...</p>';
+        detailsContainer.innerHTML = '<p style="padding: 20px; text-align: center;">Carregando informações da campanha...</p>';
         openModal(modalDetalhes);
 
         const data = await api.getCampaignById(id);
         if (!data) {
-          detailsContainer.innerHTML = '<p>Erro ao carregar detalhes.</p>';
+          detailsContainer.innerHTML = '<p style="padding: 20px; text-align: center; color: var(--sa-red-accent);">Erro ao carregar os detalhes da campanha.</p>';
           return;
         }
 
@@ -184,31 +291,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
         detailsContainer.innerHTML = `
           <div>
-            <img src="${data.image_url}" style="width: 100%; height: 220px; object-fit: cover; border-radius: var(--vk-radius-md); margin-bottom: 16px;">
-            <span class="vk-card-code" style="position: static;">${data.code}</span>
-            <h2 style="font-size: 1.3rem; font-weight: 800; margin: 8px 0;">${data.title}</h2>
-            <p style="font-size: 0.85rem; color: var(--vk-text-muted); margin-bottom: 12px;">Organizado por <strong>${data.creator_name}</strong> • ${data.location}</p>
-            <p style="font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">${data.description}</p>
-            
-            <div class="vk-progress-box">
-              <div class="vk-progress-bar" style="width: ${pct}%;"></div>
+            <img src="${data.image_url}" style="width: 100%; height: 220px; object-fit: cover; border-radius: var(--sa-radius-md); margin-bottom: 16px;">
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+              <span class="sa-card-tag">${data.code}</span>
+              <span class="sa-card-tag">${(data.category || 'GERAL').toUpperCase()}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-weight: 800; margin-bottom: 24px;">
-              <span>R$ ${currentAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} arrecadados</span>
-              <span>Meta: R$ ${targetAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+            <h2 style="font-size: 1.35rem; font-weight: 900; margin: 8px 0; color: var(--sa-text-primary);">${data.title}</h2>
+            <p style="font-size: 0.85rem; color: var(--sa-text-muted); margin-bottom: 14px;">Organizado por <strong>${data.creator_name}</strong> • ${data.location}</p>
+            <p style="font-size: 0.95rem; line-height: 1.65; margin-bottom: 24px; color: var(--sa-text-secondary);">${data.description}</p>
+            
+            <div class="sa-progress-bar-wrapper">
+              <div class="sa-progress-bar-track" style="height: 10px;">
+                <div class="sa-progress-bar-fill" style="width: ${pct}%;"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-weight: 800; margin-top: 8px;">
+                <span style="color: var(--sa-green-dark);">R$ ${currentAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} arrecadados</span>
+                <span style="color: var(--sa-text-muted);">Meta: R$ ${targetAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${pct}%)</span>
+              </div>
             </div>
 
-            <h3 style="font-size: 1.1rem; font-weight: 800; border-top: 1px solid #e2e8f0; padding-top: 16px; margin-bottom: 12px;">👥 Recentes Apoiadores / Doadores</h3>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
+            <h3 style="font-size: 1.05rem; font-weight: 800; border-top: 1px solid #e2e8f0; padding-top: 18px; margin: 20px 0 12px; color: var(--sa-text-primary);">👥 Apoiadores Recentes</h3>
+            <div style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto;">
               ${data.donations && data.donations.length > 0 ? data.donations.map(d => `
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: var(--vk-radius-sm);">
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 14px; border-radius: var(--sa-radius-sm);">
                   <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700;">
                     <span>${d.donor_name}</span>
-                    <span style="color: var(--vk-green-dark);">R$ ${parseFloat(d.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    <span style="color: var(--sa-green-dark);">R$ ${parseFloat(d.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                   </div>
-                  <p style="font-size: 0.82rem; color: var(--vk-text-secondary); margin-top: 4px;">"${d.support_message || 'Apoiou esta vaquinha!'}"</p>
+                  <p style="font-size: 0.82rem; color: var(--sa-text-secondary); margin-top: 4px;">"${d.support_message || 'Apoiou esta campanha solidária!'}"</p>
                 </div>
-              `).join('') : '<p style="font-size: 0.85rem; color: var(--vk-text-muted);">Seja o primeiro a apoiar esta vaquinha!</p>'}
+              `).join('') : '<p style="font-size: 0.85rem; color: var(--sa-text-muted); text-align: center; padding: 12px;">Seja o primeiro a apoiar esta campanha!</p>'}
             </div>
           </div>
         `;
@@ -234,14 +346,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- SELEÇÃO RÁPIDA DE VALORES R$ ---
-  const amountBtns = document.querySelectorAll('.vk-amount-btn');
+  const amountBtns = document.querySelectorAll('.sa-amount-btn');
   const inputValor = document.getElementById('input-doar-valor');
 
   amountBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       amountBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      inputValor.value = btn.getAttribute('data-val');
+      if (inputValor) inputValor.value = btn.getAttribute('data-val');
     });
   });
 
@@ -251,22 +363,22 @@ document.addEventListener('DOMContentLoaded', () => {
     btnCopiarPix.addEventListener('click', () => {
       const codeText = document.getElementById('lbl-pix-code').textContent;
       navigator.clipboard.writeText(codeText).then(() => {
-        showToast('📋 Código PIX copiado com sucesso para a sua área de transferência!');
+        showToast('📋 Código PIX copiado com sucesso! Abra o app do seu banco para pagar.');
       }).catch(() => {
         showToast('Código PIX selecionado.');
       });
     });
   }
 
-  // --- SUBMIT DOAR AGORA ---
+  // --- SUBMIT APOIAR VIA PIX ---
   const formDoarPix = document.getElementById('form-doar-pix');
   if (formDoarPix) {
     formDoarPix.addEventListener('submit', async (e) => {
       e.preventDefault();
       const campaign_id = document.getElementById('modal-doar-campaign-id').value;
       const amount = parseFloat(document.getElementById('input-doar-valor').value || 0);
-      const items_qty = parseInt(document.getElementById('input-doar-itens').value || 0);
-      const donor_name = document.getElementById('input-doar-nome').value;
+      const items_qty = parseInt(document.getElementById('input-doar-itens').value || 0, 10);
+      const donor_name = document.getElementById('input-doar-nome').value || 'Apoiador Solidário';
       const support_message = document.getElementById('input-doar-mensagem').value;
 
       try {
@@ -280,44 +392,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         closeModal(modalDoarPix);
-        showToast(`🎉 Doação de R$ ${amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} registrada com sucesso! Muito obrigado pelo apoio! ❤️`);
+        showToast(`🎉 Apoio de R$ ${amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} registrado com sucesso! Obrigado pela solidariedade! ❤️`);
         loadAndRenderCampaigns();
       } catch (err) {
-        showToast('Erro ao processar doação.');
+        showToast('Erro ao processar o apoio.');
       }
     });
   }
 
-  // --- SUBMIT CRIAR UMA VAQUINHA ---
-  const formCriarVaquinha = document.getElementById('form-criar-vaquinha');
-  if (formCriarVaquinha) {
-    formCriarVaquinha.addEventListener('submit', async (e) => {
+  // --- SUBMIT CRIAR NOVA CAMPANHA ---
+  const formCriarCampanha = document.getElementById('form-criar-campanha');
+  if (formCriarCampanha) {
+    formCriarCampanha.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const newCampaign = {
         title: document.getElementById('new-title').value,
         category: document.getElementById('new-category').value,
         target_amount: parseFloat(document.getElementById('new-target-amount').value || 0),
-        target_items: parseInt(document.getElementById('new-target-items').value || 0),
+        target_items: parseInt(document.getElementById('new-target-items').value || 0, 10),
         unit: document.getElementById('new-unit').value || 'unidades',
         description: document.getElementById('new-description').value,
         creator_name: document.getElementById('new-creator-name').value,
         location: document.getElementById('new-location').value,
-        image_url: document.getElementById('new-image-url').value
+        image_url: document.getElementById('new-image-url').value || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&auto=format&fit=crop&q=80'
       };
 
       try {
         await api.createCampaign(newCampaign);
-        closeModal(modalCriarVaquinha);
-        showToast('🚀 Sua Vaquinha Solidária foi criada e publicada com SUCESSO!');
-        formCriarVaquinha.reset();
+        closeModal(modalCriarCampanha);
+        showToast('🚀 Sua Campanha Solidária foi criada e publicada com sucesso na rede SolidarAção!');
+        formCriarCampanha.reset();
         loadAndRenderCampaigns();
       } catch (err) {
-        showToast('Erro ao criar vaquinha.');
+        showToast('Erro ao criar campanha.');
       }
     });
   }
 
-  // Carga inicial das campanhas
+  // Inicializações
+  initImpactCounters();
   loadAndRenderCampaigns();
 });

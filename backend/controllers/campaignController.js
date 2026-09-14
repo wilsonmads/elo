@@ -79,7 +79,7 @@ async function createCampaign(req, res) {
       return res.status(400).json({ success: false, message: 'Preencha todos os campos obrigatórios' });
     }
 
-    const code = 'VK-' + Math.floor(1000 + Math.random() * 9000);
+    const code = 'SA-' + Math.floor(1000 + Math.random() * 9000);
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const finalImage = image_url || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&auto=format&fit=crop&q=80';
 
