@@ -156,8 +156,8 @@ a {
 
 /* Nav Principal */
 .sa-header-main {
-  background-color: var(--sa-bg-header);
-  border-bottom: 1px solid #e2e8f0;
+  background-color: #e3f7dc;
+  border-bottom: 2px solid #ff0000;
 }
 
 .sa-header-main .sa-header-container {
@@ -634,8 +634,33 @@ a {
 }
 
 .sa-pilar-icon {
-  font-size: 2.5rem;
+  font-size: 2.3rem;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sa-green-primary);
+  height: 48px;
+  width: 48px;
+  margin: 0 auto;
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.sa-pilar-icon i {
+  display: inline-block;
+  line-height: 1;
+}
+
+.sa-pilar-icon img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  display: block;
+}
+
+.sa-pilar-item a:hover .sa-pilar-icon {
+  transform: scale(1.18);
+  color: var(--sa-green-dark);
 }
 
 .sa-pilar-item p {
