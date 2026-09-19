@@ -24,7 +24,7 @@ async function createDonation(req, res) {
     const method = payment_method || 'pix';
 
     // Gerar código PIX fictício único se a opção for PIX
-    const pixCode = `00020126580014br.gov.bcb.pix0136${Math.random().toString(36).substring(2, 15)}${Date.now()}5204000053039865405${valAmount.toFixed(2)}5802BR5920SOLIDARACAO BR6009BLUMENAU62070503***630489A1`;
+    const pixCode = `00020126580014br.gov.bcb.pix0136${Math.random().toString(36).substring(2, 15)}${Date.now()}5204000053039865405${valAmount.toFixed(2)}5802BR5920SOLIDARACAO BR6007ARACATI62070503***630489A1`;
 
     const sqlDonation = `
       INSERT INTO donations (campaign_id, donor_name, amount, items_qty, payment_method, support_message, pix_code)

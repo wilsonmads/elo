@@ -8,6 +8,7 @@ const fs = require('fs');
 let dbDriver = 'mysql';
 let mysqlPool = null;
 let sqliteDb = null;
+const allowSQLiteFallback = process.env.DB_FALLBACK_SQLITE === 'true';
 
 // Configurações do MySQL (variáveis de ambiente ou padrões locais)
 const DB_CONFIG = {
@@ -44,8 +45,13 @@ async function initDatabase() {
     await setupMySQLSchema();
     return;
   } catch (err) {
-    console.warn('⚠️ Não foi possível conectar ao servidor MySQL local (' + err.message + '). Ativando modo Fallback SQLite3.');
-    setupSQLite();
+    if (allowSQLiteFallback) {
+      console.warn('⚠️ Não foi possível conectar ao servidor MySQL local (' + err.message + '). Ativando modo Fallback SQLite3.');
+      setupSQLite();
+      return;
+    }
+
+    throw new Error(`Não foi possível conectar ao MySQL: ${err.message}. Corrija DB_HOST, DB_PORT, DB_USER e DB_PASSWORD ou defina DB_FALLBACK_SQLITE=true para usar SQLite.`);
   }
 }
 

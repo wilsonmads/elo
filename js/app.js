@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnAbrirCriar = document.getElementById('btn-abrir-criar-campanha');
   const btnHeroCriar = document.getElementById('btn-hero-criar');
   const btnCtaCriar = document.getElementById('btn-cta-criar');
+  const btnDoeAgora = document.getElementById('btn-doe-agora');
 
   // Helper Toast Notification
   function showToast(message) {
@@ -66,6 +67,32 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', () => openModal(modalCriarCampanha));
     }
   });
+
+  // Leva o usuário diretamente para o apoio de uma campanha disponível.
+  if (btnDoeAgora) {
+    btnDoeAgora.addEventListener('click', async (e) => {
+      e.preventDefault();
+      document.getElementById('section-campanhas')?.scrollIntoView({ behavior: 'smooth' });
+
+      try {
+        await loadAndRenderCampaigns();
+        const campaignButtons = gridContainer?.querySelectorAll('.btn-abrir-doar') || [];
+        const randomIndex = Math.floor(Math.random() * campaignButtons.length);
+        const randomCampaignButton = campaignButtons[randomIndex];
+
+        if (randomCampaignButton) {
+          randomCampaignButton.click();
+          return;
+        }
+      } catch (error) {
+        console.error('Erro ao carregar campanhas para doação:', error);
+      }
+
+      {
+        showToast('No momento, não há campanhas disponíveis para apoiar.');
+      }
+    });
+  }
 
   // --- CONTADORES DE IMPACTO ANIMADOS (Estilo ActionAid) ---
   function initImpactCounters() {
@@ -196,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const code = c.code || `#SA-${c.id}`;
       const creator = c.creator_name || c.responsavel || 'Organização Solidária';
-      const location = c.location || c.endereco || 'Blumenau - SC';
+      const location = c.location || c.endereco || 'Aracati - CE';
       const image = c.image_url || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&auto=format&fit=crop&q=80';
       const title = c.title || c.nome || 'Campanha Solidária';
       const desc = c.description || c.descricao || 'Contribua com esta causa de impacto real.';
@@ -264,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modal-doar-titulo').textContent = `💚 Apoiar: ${title} (${code})`;
         
         // Gerar código PIX único
-        const randomPix = `00020126580014br.gov.bcb.pix0136${code}-PIX-${Date.now()}520400005303986540550.005802BR5920SOLIDARACAO BR6009BLUMENAU62070503***6304`;
+        const randomPix = `00020126580014br.gov.bcb.pix0136${code}-PIX-${Date.now()}520400005303986540550.005802BR5920SOLIDARACAO BR6007ARACATI62070503***6304`;
         document.getElementById('lbl-pix-code').textContent = randomPix;
 
         openModal(modalDoarPix);
@@ -392,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         closeModal(modalDoarPix);
-        showToast(`🎉 Apoio de R$ ${amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} registrado com sucesso! Obrigado pela solidariedade! ❤️`);
+        showToast(` Apoio de R$ ${amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} registrado com sucesso! Obrigado pela solidariedade! ❤️`);
         loadAndRenderCampaigns();
       } catch (err) {
         showToast('Erro ao processar o apoio.');

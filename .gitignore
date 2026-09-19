@@ -1,4 +1,9 @@
+backend/.env
+backend/db/database.sqlite
+node_modules/
 .DS_Store
+.vscode/
+.vscode/.DS_Store
 *.log
 node_modules/
 **/node_modules/

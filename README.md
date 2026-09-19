@@ -34,7 +34,8 @@ npm start
 - O servidor iniciará em `http://localhost:3000`.
 - API REST de campanhas: `http://localhost:3000/api/campaigns`
 - Status do servidor: `http://localhost:3000/api/status`
-- O backend conta com suporte a **MySQL 9** e fallback automático resiliente para **SQLite3**.
+- O backend grava no **MySQL** por padrão. Configure `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` e `DB_NAME` em `backend/.env` antes de iniciar.
+- O fallback para **SQLite3** é opcional: defina `DB_FALLBACK_SQLITE=true` apenas quando quiser executar sem MySQL. Com `false`, o servidor interrompe a inicialização se as credenciais do MySQL estiverem incorretas.
 
 ---
 

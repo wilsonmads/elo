@@ -56,8 +56,8 @@ async function seedInitialData() {
           unit: 'cestas',
           image_url: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&auto=format&fit=crop&q=80',
           creator_name: 'ONG Esperança Viva',
-          creator_phone: '(47) 99123-4567',
-          location: 'Blumenau - SC'
+          creator_phone: '(88) 99123-4567',
+          location: 'Aracati - CE'
         },
         {
           code: 'SA-1002',
@@ -72,8 +72,8 @@ async function seedInitialData() {
           unit: 'peças',
           image_url: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&auto=format&fit=crop&q=80',
           creator_name: 'Mãos Unidas da Comunidade',
-          creator_phone: '(47) 98877-6655',
-          location: 'Blumenau - SC'
+          creator_phone: '(88) 98877-6655',
+          location: 'Aracati - CE'
         },
         {
           code: 'SA-1003',
@@ -88,8 +88,8 @@ async function seedInitialData() {
           unit: 'kits',
           image_url: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&auto=format&fit=crop&q=80',
           creator_name: 'Instituto Proteja',
-          creator_phone: '(47) 99911-2233',
-          location: 'Blumenau - SC'
+          creator_phone: '(88) 99911-2233',
+          location: 'Aracati - CE'
         }
       ];
 

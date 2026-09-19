@@ -7,9 +7,9 @@ window.INITIAL_DATA = {
       code: 'SA-1001',
       nome: 'Ajude a Alimentar 200 Famílias — Cestas Básicas de Emergência',
       title: 'Ajude a Alimentar 200 Famílias — Cestas Básicas de Emergência',
-      endereco: 'Bairro Centenário — Blumenau',
+      endereco: 'Bairro Centenário — Aracati',
       bairro: 'Centenário',
-      contato: '(47) 99123-4567',
+      contato: '(88) 99123-4567',
       responsavel: 'ONG Esperança Viva',
       creator_name: 'ONG Esperança Viva',
       is_verified: true,
@@ -24,7 +24,7 @@ window.INITIAL_DATA = {
       current_items: 112,
       unit: 'cestas',
       image_url: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&auto=format&fit=crop&q=80',
-      location: 'Blumenau - SC',
+      location: 'Aracati - CE',
       horario: 'Atendimento contínuo'
     },
     {
@@ -32,9 +32,9 @@ window.INITIAL_DATA = {
       code: 'SA-1002',
       nome: 'Campanha do Agasalho e Cobertores — Inverno Sem Fome',
       title: 'Campanha do Agasalho e Cobertores — Inverno Sem Fome',
-      endereco: 'Centro — Blumenau',
+      endereco: 'Centro — Aracati',
       bairro: 'Centro',
-      contato: '(47) 98877-6655',
+      contato: '(88) 98877-6655',
       responsavel: 'ONG Mãos Unidas',
       creator_name: 'ONG Mãos Unidas',
       is_verified: true,
@@ -49,7 +49,7 @@ window.INITIAL_DATA = {
       current_items: 195,
       unit: 'peças',
       image_url: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&auto=format&fit=crop&q=80',
-      location: 'Blumenau - SC',
+      location: 'Aracati - CE',
       horario: 'Seg a Sáb: 08h às 18h'
     },
     {
@@ -57,9 +57,9 @@ window.INITIAL_DATA = {
       code: 'SA-1003',
       nome: 'Kit Higiene Pessoal e Proteção',
       title: 'Kit Higiene Pessoal e Proteção',
-      endereco: 'Victor Konder — Blumenau',
+      endereco: 'Centro — Aracati',
       bairro: 'Victor Konder',
-      contato: '(47) 99911-2233',
+      contato: '(88) 99911-2233',
       responsavel: 'Instituto Proteja',
       creator_name: 'Instituto Proteja',
       is_verified: true,
@@ -74,7 +74,7 @@ window.INITIAL_DATA = {
       current_items: 95,
       unit: 'kits',
       image_url: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&auto=format&fit=crop&q=80',
-      location: 'Blumenau - SC',
+      location: 'Aracati - CE',
       horario: 'Diariamente: 08h às 17h'
     }
   ],
