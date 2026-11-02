@@ -175,9 +175,7 @@ doacao_colaborativa/
 │       ├── schema.sql           # Script SQL para MySQL / Workbench
 │       └── database.sqlite      # Arquivo de banco de dados SQLite local
 └── docs/
-    ├── relatorio_extensao.md    # Relatório acadêmico completo (Etapas a até i)
-    ├── paper_academico.md       # Artigo científico formatado com citações ABNT
-    └── questionario_google_forms.md # Questionário de 12 perguntas (Google Forms)
+    └── heart-handshake.png      # Logo do projeto
 ```
 
 ---
@@ -194,15 +192,6 @@ Este projeto foi concebido e documentado em conformidade com as diretrizes de **
 2. **Material Design 3 (Google, 2024)**: Hierarquia tipográfica, contraste acessível, superfícies elevadas e microinterações.
 3. **10 Heurísticas de Usabilidade (Nielsen, 1994, 2020)**: Visibilidade do status do sistema (toasts de feedback), prevenção de erros em formulários e facilidade de reconhecimento.
 4. **Contexto Social da Fome e Vulnerabilidade**: Embasa-se nos dados da **ActionAid (2023)** (*33 milhões de brasileiros em insegurança alimentar*) e **Neves (2021)**.
-
----
-
-## 📄 Documentos do Projeto
-
-Dentro da pasta [`docs/`](./docs/) você encontra a documentação acadêmica completa:
-* **[`docs/relatorio_extensao.md`](./docs/relatorio_extensao.md)**: Relatório detalhado das etapas **a** até **i** exigidas na atividade extensionista.
-* **[`docs/paper_academico.md`](./docs/paper_academico.md)**: Artigo científico estruturado (*Resumo, Introdução, Metodologia, Arquitetura, Resultados e Referências*).
-* **[`docs/questionario_google_forms.md`](./docs/questionario_google_forms.md)**: Roteiro com 12 perguntas prontas (múltipla escolha, escalas Likert e dissertativa) para aplicação no Google Formulários (Etapa C).
 
 ---
 
